@@ -60,13 +60,17 @@ public final class GetCommentAuthorQuery: GraphQLQuery {
     }
 
     public struct CommentAuthor: GraphQLSelectionSet {
-      public static let possibleTypes: [String] = ["User"]
+      public static let possibleTypes: [String] = ["User", "DeletedUser"]
 
       public static var selections: [GraphQLSelection] {
         return [
-          GraphQLField("__typename", type: .nonNull(.scalar(String.self))),
-          GraphQLField("username", type: .nonNull(.scalar(String.self))),
-          GraphQLField("id", type: .nonNull(.scalar(GraphQLID.self))),
+          GraphQLTypeCase(
+            variants: ["User": AsUser.selections],
+            default: [
+              GraphQLField("__typename", type: .nonNull(.scalar(String.self))),
+              GraphQLField("username", type: .nonNull(.scalar(String.self))),
+            ]
+          )
         ]
       }
 
@@ -76,8 +80,12 @@ public final class GetCommentAuthorQuery: GraphQLQuery {
         self.resultMap = unsafeResultMap
       }
 
-      public init(username: String, id: GraphQLID) {
-        self.init(unsafeResultMap: ["__typename": "User", "username": username, "id": id])
+      public static func makeDeletedUser(username: String) -> CommentAuthor {
+        return CommentAuthor(unsafeResultMap: ["__typename": "DeletedUser", "username": username])
+      }
+
+      public static func makeUser(username: String, id: GraphQLID) -> CommentAuthor {
+        return CommentAuthor(unsafeResultMap: ["__typename": "User", "username": username, "id": id])
       }
 
       public var __typename: String {
@@ -98,12 +106,63 @@ public final class GetCommentAuthorQuery: GraphQLQuery {
         }
       }
 
-      public var id: GraphQLID {
+      public var asUser: AsUser? {
         get {
-          return resultMap["id"]! as! GraphQLID
+          if !AsUser.possibleTypes.contains(__typename) { return nil }
+          return AsUser(unsafeResultMap: resultMap)
         }
         set {
-          resultMap.updateValue(newValue, forKey: "id")
+          guard let newValue = newValue else { return }
+          resultMap = newValue.resultMap
+        }
+      }
+
+      public struct AsUser: GraphQLSelectionSet {
+        public static let possibleTypes: [String] = ["User"]
+
+        public static var selections: [GraphQLSelection] {
+          return [
+            GraphQLField("__typename", type: .nonNull(.scalar(String.self))),
+            GraphQLField("username", type: .nonNull(.scalar(String.self))),
+            GraphQLField("id", type: .nonNull(.scalar(GraphQLID.self))),
+          ]
+        }
+
+        public private(set) var resultMap: ResultMap
+
+        public init(unsafeResultMap: ResultMap) {
+          self.resultMap = unsafeResultMap
+        }
+
+        public init(username: String, id: GraphQLID) {
+          self.init(unsafeResultMap: ["__typename": "User", "username": username, "id": id])
+        }
+
+        public var __typename: String {
+          get {
+            return resultMap["__typename"]! as! String
+          }
+          set {
+            resultMap.updateValue(newValue, forKey: "__typename")
+          }
+        }
+
+        public var username: String {
+          get {
+            return resultMap["username"]! as! String
+          }
+          set {
+            resultMap.updateValue(newValue, forKey: "username")
+          }
+        }
+
+        public var id: GraphQLID {
+          get {
+            return resultMap["id"]! as! GraphQLID
+          }
+          set {
+            resultMap.updateValue(newValue, forKey: "id")
+          }
         }
       }
     }

@@ -11,3 +11,8 @@ type User implements CommentAuthor {
 type Query {
   commentAuthor(id: ID!): CommentAuthor
 }
+
+# Another implementer of the CommentAuthor interface
+type DeletedUser implements CommentAuthor {
+  username: String!
+}

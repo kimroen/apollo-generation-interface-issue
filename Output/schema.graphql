@@ -1,0 +1,13 @@
+interface CommentAuthor {
+  username: String!
+}
+
+# This is the only type implementing CommentAuthor
+type User implements CommentAuthor {
+  id: ID!
+  username: String!
+}
+
+type Query {
+  commentAuthor(id: ID!): CommentAuthor
+}

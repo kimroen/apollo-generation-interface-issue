@@ -1,0 +1,8 @@
+query GetCommentAuthor($id: ID!) {
+  commentAuthor(id: $id) {
+    username
+    ... on User {
+      id
+    }
+  }
+}
